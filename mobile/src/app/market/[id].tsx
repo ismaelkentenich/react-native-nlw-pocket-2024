@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { View, Alert, Modal } from "react-native";
 import { router, useLocalSearchParams, Redirect } from "expo-router";
 import { useCameraPermissions, CameraView } from "expo-camera";
@@ -18,11 +18,14 @@ type DataProps = PropsDetails & {
 export default function Market() {
   const [data, setData] = useState<DataProps>();
   const [isLoading, setIsLoading] = useState(true);
+  const [couponIsFetching, setCouponIsFetching] = useState(false);
   const [coupon, setCoupon] = useState<string | null>(null);
   const [isVisibleCameraModal, setIsVisibleCameraModal] = useState(false);
 
   const [_, requestPermission] = useCameraPermissions();
   const params = useLocalSearchParams<{ id: string }>();
+
+  const qrLock = useRef(false);
 
   async function fetchMarket() {
     try {
@@ -52,6 +55,21 @@ export default function Market() {
     }
   }
 
+  async function getCoupon(id: string) {
+    try {
+      setCouponIsFetching(true);
+
+      const { data } = await api.patch("/coupons/" + id);
+      Alert.alert("Cupom", data.coupon);
+      setCoupon(data.coupon);
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Erro", "Não foi possível utilizar o cupom.");
+    } finally {
+      setCouponIsFetching(false);
+    }
+  }
+
   useEffect(() => {
     fetchMarket();
   }, [params.id]);
@@ -77,9 +95,21 @@ export default function Market() {
       </View>
 
       <Modal style={{ flex: 1 }} visible={isVisibleCameraModal}>
-        <CameraView style={{ flex: 1 }} />
+        <CameraView
+          style={{ flex: 1 }}
+          facing="back"
+          onBarcodeScanned={({ data }) => {
+            if (data && !qrLock.current) {
+              qrLock.current = true;
+              setTimeout(() => console.log(data), 500);
+            }
+          }}
+        />
         <View style={{ position: "absolute", bottom: 32, left: 32, right: 32 }}>
-          <Button onPress={() => setIsVisibleCameraModal(false)}>
+          <Button
+            onPress={() => setIsVisibleCameraModal(false)}
+            isLoading={couponIsFetching}
+          >
             <Button.Title>Voltar</Button.Title>
           </Button>
         </View>
