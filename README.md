@@ -28,7 +28,7 @@ During the development of Nearby, various concepts and technologies were applied
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/nearby.git](https://github.com/ismaelkentenich/nlw_journey_react_native
+   git clone https://github.com/ismaelkentenich/nlw_journey_react_native
    ```
 
 2. **Navigate to the project directories:**
